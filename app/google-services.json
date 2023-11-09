@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "151916235747",
+    "project_id": "fllaf-messenger",
+    "storage_bucket": "fllaf-messenger.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:151916235747:android:41665331ceb1440e60eed6",
+        "android_client_info": {
+          "package_name": "com.qwy_games.fllafmessenger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7w2KTU_5qy1UdupD-cFkUeLXNStVD6dM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
