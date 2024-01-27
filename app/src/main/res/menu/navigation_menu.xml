@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn = "navigation_view"
+    android:background="@color/primary">
+
+    <item android:title="" />
+    <item android:title="" />
+    <item android:title="" />
+    <item android:title="" />
+    <item android:title="" />
+    <item android:title="" />
+    <item android:title="" />
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/contacts_button"
+            android:title="@string/contacts"
+            android:icon="@drawable/ic_round_people" />
+
+        <item
+            android:id="@+id/calls_button"
+            android:title="@string/calls"
+            android:icon="@drawable/ic_round_call" />
+
+        <item
+            android:id="@+id/settings_button"
+            android:title="@string/settings"
+            android:icon="@drawable/ic_round_settings" />
+    </group>
+
+    <item android:title="" />
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/invite_friends_button"
+            android:title="@string/invite_friends"
+            android:icon="@drawable/ic_round_person_add" />
+
+        <item
+            android:id="@+id/fllaf_features_button"
+            android:title="@string/fllaf_features"
+            android:icon="@drawable/ic_round_question" />
+    </group>
+</menu>
