@@ -47,6 +47,7 @@ public class MainActivity extends BaseActivity implements ConversionListener {
     private DrawerLayout drawerLayout;
     private ImageView profileImage;
 
+    // Отрисовка activity_main.xml и инициализация всего необходимого
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +63,7 @@ public class MainActivity extends BaseActivity implements ConversionListener {
         listenConversations();
     }
 
+    // Инициализация адаптеров, conversation, базы данных, бокового меню
     private void init() {
         conversations = new ArrayList<>();
         conversationsAdapter = new RecentConversationsAdapter(conversations, this);
@@ -104,6 +106,7 @@ public class MainActivity extends BaseActivity implements ConversionListener {
         });
     }
 
+    // Функция для кнопок, чтобы они работали
     private void setListeners() {
         binding.imageSignOut.setOnClickListener(v -> signOut());
         binding.fabNewChat.setOnClickListener(v -> startActivity(new Intent(getApplicationContext(),
@@ -111,6 +114,7 @@ public class MainActivity extends BaseActivity implements ConversionListener {
         binding.imageProfile.setOnClickListener(v -> drawerLayout.open());
     }
 
+    // Загрузка данных пользователя
     private void loadUserDetails() {
         binding.textName.setText(preferenceManager.getString(Constants.KEY_NAME));
         byte[] bytes = Base64.decode(preferenceManager.getString(Constants.KEY_IMAGE), Base64.DEFAULT);
@@ -122,6 +126,7 @@ public class MainActivity extends BaseActivity implements ConversionListener {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+    // Фунция для получения последнего сообщения, написанного пользователем
     private void listenConversations() {
         database.collection(Constants.KEY_COLLECTION_CONVERSATIONS)
                 .whereEqualTo(Constants.KEY_SENDER_ID, preferenceManager.getString(Constants.KEY_USER_ID))
@@ -174,10 +179,12 @@ public class MainActivity extends BaseActivity implements ConversionListener {
       }
     };
 
+    // Фунция для получения токена FirebaseMessaging (fcmToken)
     private void getToken() {
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::updateToken);
     }
 
+    // Фунция для обновления токена FirebaseMessaging (fcmToken)
     private void updateToken(String token) {
         preferenceManager.putString(Constants.KEY_FCM_TOKEN, token);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
@@ -188,6 +195,7 @@ public class MainActivity extends BaseActivity implements ConversionListener {
                 .addOnFailureListener(e -> showToast("Unable to update token"));
     }
 
+    // Фунция для выхода из учетной записи
     private void signOut() {
         // showToast("Signing out...");
         FirebaseFirestore database = FirebaseFirestore.getInstance();

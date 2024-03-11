@@ -16,6 +16,7 @@ public class SecondFragment extends Fragment {
 
     private FragmentSecondBinding binding;
 
+    // Фунция для отрисовки фрагмента
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,

@@ -54,6 +54,7 @@ public class ChatActivity extends BaseActivity {
     private String conversionId = null;
     private Boolean isReceiverAvailable = false;
 
+    // Отрисовка activity_chat.xml и инициализация всего необходимого
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +66,7 @@ public class ChatActivity extends BaseActivity {
         listenMessages();
     }
 
+    // Инициализация адаптеров и базы данных FirebaseFirestore
     private void init() {
         preferenceManager = new PreferenceManager(getApplicationContext());
         chatMessages = new ArrayList<>();
@@ -74,8 +76,9 @@ public class ChatActivity extends BaseActivity {
         database = FirebaseFirestore.getInstance();
     }
 
+    // Функция для отправки сообщений
     private void sendMessage() {
-        if(!binding.inputMessage.getText().toString().equals("")){
+        if(!binding.inputMessage.getText().toString().equals("")){ // Проверка содержания сообщения в inputMessage, если оно != 0, то далее
             HashMap<String, Object> message = new HashMap<>();
             message.put(Constants.KEY_SENDER_ID, preferenceManager.getString(Constants.KEY_USER_ID));
             message.put(Constants.KEY_RECEIVER_ID, receiverUser.id);
@@ -86,6 +89,7 @@ public class ChatActivity extends BaseActivity {
             if(conversionId != null) {
                 updateConversion(binding.inputMessage.getText().toString());
             } else {
+                // Заполнение данных, введенными пользователем, в HashMap conversion
                 HashMap<String, Object> conversion = new HashMap<>();
                 conversion.put(Constants.KEY_SENDER_ID, preferenceManager.getString(Constants.KEY_USER_ID));
                 conversion.put(Constants.KEY_SENDER_NAME, preferenceManager.getString(Constants.KEY_NAME));
@@ -97,8 +101,9 @@ public class ChatActivity extends BaseActivity {
                 conversion.put(Constants.KEY_TIMESTAMP, new Date());
                 addConversion(conversion);
             }
-            if(!isReceiverAvailable) {
+            if(!isReceiverAvailable) { // Если пользователь не в сети, то далее
                 try {
+                    // Отправка увледомления
                     JSONArray tokens = new JSONArray();
                     tokens.put(receiverUser.token);
 
@@ -117,7 +122,7 @@ public class ChatActivity extends BaseActivity {
                     showToast(e.getMessage());
                 }
             }
-            binding.inputMessage.setText(null);
+            binding.inputMessage.setText(null); // Очистка поля ввода
         }
     }
 
@@ -125,6 +130,7 @@ public class ChatActivity extends BaseActivity {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+    // Функция для отправки увледомления
     private void sendNotification(String messageBody) {
         ApiClient.getClient().create(ApiService.class).sendMessage(
                 Constants.getRemoteMsgHeaders(),
@@ -146,7 +152,7 @@ public class ChatActivity extends BaseActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    showToast("Notification send successfully");
+                    // showToast("Notification send successfully");
                 } else {
                     showToast("Error: " + response.code());
                 }
@@ -159,6 +165,7 @@ public class ChatActivity extends BaseActivity {
         });
     }
 
+    // Функция для проверки пользователя, в сети ли он
     private void listenAvailabilityOfReceiver() {
         database.collection(Constants.KEY_COLLECTION_USERS).document(
                 receiverUser.id
@@ -180,6 +187,7 @@ public class ChatActivity extends BaseActivity {
                    chatAdapter.notifyItemRangeChanged(0, chatMessages.size());
                }
            }
+           // Отрисовка поля с текстом если пользователь в сети
            if(isReceiverAvailable) {
                binding.textAvailability.setVisibility(View.VISIBLE);
            } else {
@@ -188,6 +196,7 @@ public class ChatActivity extends BaseActivity {
         });
     }
 
+    // Функция для получения увледомлений
     private void listenMessages() {
         database.collection(Constants.KEY_COLLECTION_CHAT)
                 .whereEqualTo(Constants.KEY_SENDER_ID, preferenceManager.getString(Constants.KEY_USER_ID))
@@ -231,6 +240,7 @@ public class ChatActivity extends BaseActivity {
         }
     };
 
+    // Расшифровка Bitmap из зашифровонной строки
     private Bitmap getBitmapFromEncodedString(String encodedImage) {
         if(encodedImage != null) {
             byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
@@ -240,32 +250,38 @@ public class ChatActivity extends BaseActivity {
         }
     }
 
+    // Загрузка данных получателя
     private void loadReceiverDetails() {
         receiverUser = (User) getIntent().getSerializableExtra(Constants.KEY_USER);
         binding.textName.setText(receiverUser.name);
     }
 
+    // Функция для кнопок, чтобы они работали
     private void setListeners() {
         binding.imageBack.setOnClickListener(v -> onBackPressed());
         binding.layoutSend.setOnClickListener(v -> sendMessage());
     }
 
+    // Функция для получения реального времени
     private String getReadableDateTime(Date date) {
         return new SimpleDateFormat("dd MMMM, yyyy - hh:mm a", Locale.getDefault()).format(date);
     }
 
+    // Фунция для добавления на главную страницу последнее сообщение, написанное пользователем
     private void addConversion(HashMap<String, Object> conversation) {
         database.collection(Constants.KEY_COLLECTION_CONVERSATIONS)
                 .add(conversation)
                 .addOnSuccessListener(documentReference -> conversionId = documentReference.getId());
     }
 
+    // Фунция для обновления последнего сообщения, написанного пользователем, на главную страницу
     private void updateConversion(String message) {
         DocumentReference documentReference = database.collection(Constants.KEY_COLLECTION_CONVERSATIONS)
                 .document(conversionId);
         documentReference.update(Constants.KEY_LAST_MESSAGE, message, Constants.KEY_TIMESTAMP, new Date());
     }
 
+    // Фунция для проверки последнего сообщения написанного пользователем
     private void checkForConversion() {
         if(chatMessages.size() != 0) {
             checkForConversionRemotely(preferenceManager.getString(Constants.KEY_USER_ID),
@@ -274,6 +290,7 @@ public class ChatActivity extends BaseActivity {
         }
     }
 
+    // Фунция для проверки удалленого conversion
     private void checkForConversionRemotely(String senderId, String receiverId) {
         database.collection(Constants.KEY_COLLECTION_CONVERSATIONS)
                 .whereEqualTo(Constants.KEY_SENDER_ID, senderId)

@@ -23,6 +23,7 @@ public class SignInActivity extends AppCompatActivity {
     private ActivitySignInBinding binding;
     private PreferenceManager preferenceManager;
 
+    // Отрисовка activity_sign_in.xml и инициализация всего необходимого
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +39,7 @@ public class SignInActivity extends AppCompatActivity {
         setListeners();
     }
 
+    // Функция для кнопок, чтобы они работали
     private void setListeners() {
         binding.textCreateNewAccount.setOnClickListener(v ->
                 startActivity(new Intent(getApplicationContext(), SignUpActivity.class)));
@@ -48,6 +50,7 @@ public class SignInActivity extends AppCompatActivity {
         });
     }
 
+    // Функция для входа в учетнуюю запись
     private void signIn() {
         loading(true);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
@@ -55,7 +58,7 @@ public class SignInActivity extends AppCompatActivity {
                 .whereEqualTo(Constants.KEY_EMAIL, binding.inputEmail.getText().toString())
                 .whereEqualTo(Constants.KEY_PASSWORD, binding.inputPassword.getText().toString())
                 .get().addOnCompleteListener(task -> {
-                    if(task.isSuccessful() && task.getResult() != null && task.getResult()
+                    if(task.isSuccessful() && task.getResult() != null && task.getResult() // если все ок, то далее
                             .getDocuments().size() > 0) {
                         DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
                         preferenceManager.putBoolean(Constants.KEY_IS_SIGNED_IN, true);
@@ -64,7 +67,7 @@ public class SignInActivity extends AppCompatActivity {
                         preferenceManager.putString(Constants.KEY_IMAGE, documentSnapshot.getString(Constants.KEY_IMAGE));
                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
+                        startActivity(intent); // Переход на главную страницу
                     } else {
                         loading(false);
                         showToast("Unable to sign in");
@@ -76,6 +79,7 @@ public class SignInActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+    // Валидация формы входа
     private Boolean isValidSignInDetails() {
         if(binding.inputEmail.getText().toString().trim().isEmpty()) {
             showToast("Enter email");
@@ -91,6 +95,7 @@ public class SignInActivity extends AppCompatActivity {
         }
     }
 
+    // Отображение загрузки
     private void loading(Boolean isLoading) {
         if(isLoading) {
             binding.buttonSignIn.setVisibility(View.INVISIBLE);

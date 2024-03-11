@@ -2,6 +2,7 @@ package com.qwy_games.fllafmessenger.activities;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -17,7 +18,10 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import com.qwy_games.fllafmessenger.R;
 import com.qwy_games.fllafmessenger.databinding.ActivitySignUpBinding;
@@ -34,7 +38,10 @@ public class SignUpActivity extends AppCompatActivity {
     private ActivitySignUpBinding binding;
     private PreferenceManager preferenceManager;
     private String encodedImage;
+    private  boolean isValidEmail;
+    private  boolean isValidName;
 
+    // Отрисовка activity_sign_up.xml и инициализация всего необходимого
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,10 +52,18 @@ public class SignUpActivity extends AppCompatActivity {
         setListeners();
     }
 
+    // Функция для кнопок, чтобы они работали
     private void setListeners() {
         binding.textSignIn.setOnClickListener(v -> onBackPressed());
         binding.buttonSignUp.setOnClickListener(v -> {
+            binding.textError.setText("");
+
+            isValidEmail();
+            isValidName();
+
             if(isValidSignUpDetails()) {
+                binding.textSuccessful.setText("That's right, press the button again!");
+                binding.textError.setText("");
                 signUp();
             }
         });
@@ -63,17 +78,19 @@ public class SignUpActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+    // Функция для регистрирования новой учетной записи
     private void signUp() {
         loading(true);
 
         FirebaseFirestore database = FirebaseFirestore.getInstance();
         HashMap<String, Object> user = new HashMap<>();
+        // Заполнение HashMap user данными, введными пользователем в форме
         user.put(Constants.KEY_NAME, binding.inputName.getText().toString());
         user.put(Constants.KEY_EMAIL, binding.inputEmail.getText().toString());
         user.put(Constants.KEY_PASSWORD, binding.inputPassword.getText().toString());
         user.put(Constants.KEY_IMAGE, encodedImage);
         database.collection(Constants.KEY_COLLECTION_USERS)
-                .add(user)
+                .add(user) // Добавление пользователя в базу данных
                 .addOnSuccessListener(documentReference -> {
                     loading(false);
                     String userName = binding.inputName.getText().toString();
@@ -91,9 +108,10 @@ public class SignUpActivity extends AppCompatActivity {
                 });
     }
 
+    // Зашифровка аватарки пользователя
     private String encodeImage(Bitmap bitmap) {
         int previewWidth = 150;
-        int previewHeight = bitmap.getHeight() * previewWidth / bitmap.getWidth();
+        int previewHeight = 150 /* bitmap.getHeight() * previewWidth / bitmap.getWidth() */;
         Bitmap previewBitmap = Bitmap.createScaledBitmap(bitmap, previewWidth, previewHeight, false);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         previewBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
@@ -121,6 +139,71 @@ public class SignUpActivity extends AppCompatActivity {
       }
     );
 
+    // Проверка одиннаковых email
+    interface EmailExistCallBack {
+        void onCompleted(boolean isExist);
+    }
+
+    private void checkIfEmailExists(String email, EmailExistCallBack callBack) {
+        FirebaseFirestore database = FirebaseFirestore.getInstance();
+        CollectionReference usersRef = database.collection(Constants.KEY_COLLECTION_USERS);
+        usersRef.whereEqualTo("email", email).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        boolean isExist = false;
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            if (document.exists()){
+                                isExist = true;
+                                binding.textError.setText("The user with this email has already been registered");
+                                break;
+                            }
+                        }
+                        callBack.onCompleted(isExist);
+                    } else {
+                        showToast("Error");
+                    }
+                });
+    }
+
+    private void isValidEmail() {
+        checkIfEmailExists(binding.inputEmail.getText().toString().trim(), isExist -> {
+            isValidEmail = !isExist;
+        });
+    }
+
+    // Проверка одиннаковых name
+    interface NameExistCallBack {
+        void onCompleted(boolean isExist);
+    }
+
+    private void checkIfNameExists(String email, NameExistCallBack callBack) {
+        FirebaseFirestore database = FirebaseFirestore.getInstance();
+        CollectionReference usersRef = database.collection(Constants.KEY_COLLECTION_USERS);
+        usersRef.whereEqualTo("name", email).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        boolean isExist = false;
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            if (document.exists()){
+                                isExist = true;
+                                binding.textError.setText("The user with this name has already been registered");
+                                break;
+                            }
+                        }
+                        callBack.onCompleted(isExist);
+                    } else {
+                        showToast("Error");
+                    }
+                });
+    }
+
+    private void isValidName() {
+        checkIfNameExists(binding.inputName.getText().toString().trim(), isExist -> {
+            isValidName = !isExist;
+        });
+    }
+
+    // Валидация формы
     private Boolean isValidSignUpDetails() {
         if(encodedImage == null) {
             showToast("Select profile image");
@@ -143,11 +226,17 @@ public class SignUpActivity extends AppCompatActivity {
         } else if(!binding.inputPassword.getText().toString().equals(binding.inputConfirmPassword.getText().toString())) {
             showToast("Password & confirm password must be same");
             return false;
+        } else if(!isValidEmail) {
+            return false;
+        } else if(!isValidName) {
+            return false;
         } else {
+            binding.textSuccessful.setText("That's right, press the button again!");
             return true;
         }
     }
 
+    // Отображение загрузки
     private void loading(Boolean isLoading) {
         if(isLoading) {
             binding.buttonSignUp.setVisibility(View.INVISIBLE);

@@ -18,7 +18,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         PreferenceManager preferenceManager = new PreferenceManager(getApplicationContext());
-        FirebaseFirestore database = FirebaseFirestore.getInstance();
+        FirebaseFirestore database = FirebaseFirestore.getInstance(); // подключение базы данных
         documentReference = database.collection(Constants.KEY_COLLECTION_USERS)
                 .document(preferenceManager.getString(Constants.KEY_USER_ID));
     }
@@ -26,12 +26,12 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        documentReference.update(Constants.KEY_AVAILABILITY, 0);
+        documentReference.update(Constants.KEY_AVAILABILITY, 0); // Пользователь не в сети
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        documentReference.update(Constants.KEY_AVAILABILITY, 1);
+        documentReference.update(Constants.KEY_AVAILABILITY, 1); // Пользователь в сети
     }
 }

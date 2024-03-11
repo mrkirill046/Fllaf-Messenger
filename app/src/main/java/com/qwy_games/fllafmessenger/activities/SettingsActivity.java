@@ -35,6 +35,7 @@ public class SettingsActivity extends AppCompatActivity {
     private PreferenceManager preferenceManager;
     private ImageView profileImage;
 
+    // Отрисовка activity_settings.xml и инициализация всего необходимого
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,11 +50,13 @@ public class SettingsActivity extends AppCompatActivity {
         setListeners();
     }
 
+    // Инициализация базы данных
     private void init() {
         database = FirebaseFirestore.getInstance();
         profileImage = findViewById(R.id.imageProfile);
     }
 
+    // Загрузка данных пользователя
     private void loadUserDetails() {
         binding.settingsTextName.setText(preferenceManager.getString(Constants.KEY_NAME));
         byte[] bytes = Base64.decode(preferenceManager.getString(Constants.KEY_IMAGE), Base64.DEFAULT);
@@ -65,10 +68,12 @@ public class SettingsActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+    // Фунция для получения токена FirebaseMessaging (fcmToken)
     private void getToken() {
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::updateToken);
     }
 
+    // Функция для кнопок, чтобы они работали
     private void setListeners() {
        binding.imageBackToMain.setOnClickListener(v -> {
            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
@@ -77,6 +82,7 @@ public class SettingsActivity extends AppCompatActivity {
        });
     }
 
+    // Фунция для обновления токена FirebaseMessaging (fcmToken)
     private void updateToken(String token) {
         preferenceManager.putString(Constants.KEY_FCM_TOKEN, token);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
