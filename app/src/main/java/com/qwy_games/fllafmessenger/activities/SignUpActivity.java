@@ -58,6 +58,7 @@ public class SignUpActivity extends AppCompatActivity {
         // обработчик нажатия на кнопку регистрации
         binding.buttonSignUp.setOnClickListener(v -> {
             binding.textError.setText("");
+            binding.buttonSignUp.setEnabled(false);
 
             // запускаем проверку e-mail и имени пользователя на уникальность
             isValidEmail();
@@ -73,6 +74,8 @@ public class SignUpActivity extends AppCompatActivity {
                         binding.textSuccessful.setText("That's right, welcome to our messenger!");
                         binding.textError.setText("");
                         signUp();
+                    } else {
+                        binding.buttonSignUp.setEnabled(true);
                     }
                 }
             }, 1500);

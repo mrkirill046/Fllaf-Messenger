@@ -190,9 +190,7 @@ public class MainActivity extends BaseActivity implements ConversionListener {
     // Выход из учетной записи и переход на экран входа в систему
     private void signOut() {
         FirebaseFirestore database = FirebaseFirestore.getInstance();
-        DocumentReference documentReference = database.collection(Constants.KEY_COLLECTION_USERS).document(
-                preferenceManager.getString(Constants.KEY_USER_ID)
-        );
+        DocumentReference documentReference = database.collection(Constants.KEY_COLLECTION_USERS).document(preferenceManager.getString(Constants.KEY_USER_ID));
         HashMap<String, Object> updates = new HashMap<>();
         // Удаление токена устройства из профиля пользователя в Firestore
         updates.put(Constants.KEY_FCM_TOKEN, FieldValue.delete());
