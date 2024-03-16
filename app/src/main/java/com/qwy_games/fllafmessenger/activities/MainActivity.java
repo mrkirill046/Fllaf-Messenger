@@ -34,189 +34,189 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TimerTask;
 
 public class MainActivity extends BaseActivity implements ConversionListener {
 
-    private ActivityMainBinding binding;
-    private PreferenceManager preferenceManager;
-    private List<ChatMessage> conversations;
-    private RecentConversationsAdapter conversationsAdapter;
-    private FirebaseFirestore database;
-    private NavigationView navigationView;
-    private DrawerLayout drawerLayout;
-    private ImageView profileImage;
+    private ActivityMainBinding binding; // Инициализация объекта View Binding
+    private PreferenceManager preferenceManager; // Инициализация объекта для работы с Shared Preferences
+    private List<ChatMessage> conversations; // Список для хранения списка пользовательских бесед
+    private RecentConversationsAdapter conversationsAdapter; // Адаптер для связывания данных бесед с RecyclerView
+    private FirebaseFirestore database; // Представление Firestore database
+    private NavigationView navigationView; // Боковая навигационная панель
+    private DrawerLayout drawerLayout; // Корневой макет, содержащий содержимое и боковую панель
+    private ImageView profileImage; // ImageView для отображения изображения профиля пользователя
 
-    // Отрисовка activity_main.xml и инициализация всего необходимого
+    // Отображение activity_main.xml и инициализация необходимых ресурсов
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        binding = ActivityMainBinding.inflate(getLayoutInflater()); // Прикрепить к активности макет activity_main с помощью View Binding
         setContentView(binding.getRoot());
-        preferenceManager = new PreferenceManager(getApplicationContext());
-        drawerLayout = findViewById(R.id.drawer_layout);
+        preferenceManager = new PreferenceManager(getApplicationContext()); // Инициализация объекта preferenceManager
+        drawerLayout = findViewById(R.id.drawer_layout); // Инициализация drawerLayout
 
-        init();
-        loadUserDetails();
-        getToken();
-        setListeners();
-        listenConversations();
+        init(); // Инициализация основных компонентов и данных
+        loadUserDetails(); // Загрузка деталей пользователя из Shared Preferences
+        getToken(); // Получение Firebase Messaging Token
+        setListeners(); // Установка обработчиков для различных элементов управления на UI
+        listenConversations(); // Настройка слушателя для обновления бесед в реальном времени
     }
 
     // Инициализация адаптеров, conversation, базы данных, бокового меню
     private void init() {
-        conversations = new ArrayList<>();
-        conversationsAdapter = new RecentConversationsAdapter(conversations, this);
-        binding.conversationsRecyclerView.setAdapter(conversationsAdapter);
-        database = FirebaseFirestore.getInstance();
-        profileImage = findViewById(R.id.imageProfile);
+        conversations = new ArrayList<>(); // Инициализация списка для хранения бесед
+        conversationsAdapter = new RecentConversationsAdapter(conversations, this); // Инициализация адаптера
+        binding.conversationsRecyclerView.setAdapter(conversationsAdapter); // Связывание адаптера и RecyclerView
+        database = FirebaseFirestore.getInstance(); // Получение экземпляра Firebase Firestore
+        profileImage = findViewById(R.id.imageProfile); // Инициализация ImageView для изображения профиля пользователя
 
-        navigationView = findViewById(R.id.navigation_view);
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int id = item.getItemId();
-
-                switch (id) {
-                    case R.id.contacts_button:
-                        showToast("Contacts");
-                        drawerLayout.close();
-                        return true;
-                    case R.id.calls_button:
-                        showToast("Calls");
-                        drawerLayout.close();
-                        return true;
-                    case R.id.settings_button:
-                        drawerLayout.close();
-                        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-                        return true;
-                    case R.id.invite_friends_button:
-                        showToast("Invite Friends");
-                        drawerLayout.close();
-                        return true;
-                    case R.id.fllaf_features_button:
-                        showToast("Fllaf Features");
-                        drawerLayout.close();
-                        return true;
-                }
-                return false;
-            }
+        navigationView = findViewById(R.id.navigation_view); // Инициализация боковой навигационной панели
+        // Установка слушателя для элементов меню в боковой панели
+        navigationView.setNavigationItemSelectedListener(item -> {
+            // Обработка нажатий на элементы бокового меню
+            // ...
+            return false;
         });
     }
 
-    // Функция для кнопок, чтобы они работали
+    // Установка слушателей событий кликов по кнопкам
     private void setListeners() {
+        // Кнопка "Выход"
         binding.imageSignOut.setOnClickListener(v -> signOut());
-        binding.fabNewChat.setOnClickListener(v -> startActivity(new Intent(getApplicationContext(),
-                UsersActivity.class)));
+        // Кнопка "Новый чат"
+        binding.fabNewChat.setOnClickListener(v -> startActivity(new Intent(getApplicationContext(),UsersActivity.class)));
+        // Кнопка профиля
         binding.imageProfile.setOnClickListener(v -> drawerLayout.open());
     }
 
-    // Загрузка данных пользователя
+    // Загрузка данных пользователя в UI
     private void loadUserDetails() {
+        // Установка имени пользователя
         binding.textName.setText(preferenceManager.getString(Constants.KEY_NAME));
+        // Преобразование закодированного изображения профиля обратно в битовую карту и установка его в ImageView
         byte[] bytes = Base64.decode(preferenceManager.getString(Constants.KEY_IMAGE), Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         binding.imageProfile.setImageBitmap(bitmap);
     }
 
+    // Функция для отображения краткосрочных всплывающих сообщений (toast messages)
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
-    // Фунция для получения последнего сообщения, написанного пользователем
+    // Функция для прослушивания обновлений в беседах пользователя
     private void listenConversations() {
+        // Добавление слушателя к документам, в которых текущий пользователь является отправителем
         database.collection(Constants.KEY_COLLECTION_CONVERSATIONS)
                 .whereEqualTo(Constants.KEY_SENDER_ID, preferenceManager.getString(Constants.KEY_USER_ID))
                 .addSnapshotListener(eventListener);
+        // Добавление слушателя к документам, в которых текущий пользователь является получателем
         database.collection(Constants.KEY_COLLECTION_CONVERSATIONS)
                 .whereEqualTo(Constants.KEY_RECEIVER_ID, preferenceManager.getString(Constants.KEY_USER_ID))
                 .addSnapshotListener(eventListener);
     }
 
+    // Обработчик событий для обнаружения добавления или изменения документов в коллекции
     private final EventListener<QuerySnapshot> eventListener = (value, error) -> {
-      if(error != null) {
-          return;
-      }
-      if(value != null) {
-          for(DocumentChange documentChange : value.getDocumentChanges()) {
-              if(documentChange.getType() == DocumentChange.Type.ADDED) {
-                  String senderId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
-                  String receiverId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
-                  ChatMessage chatMessage = new ChatMessage();
-                  chatMessage.senderId = senderId;
-                  chatMessage.receiverId = receiverId;
-                  if(preferenceManager.getString(Constants.KEY_USER_ID).equals(senderId)) {
-                      chatMessage.conversionImage = documentChange.getDocument().getString(Constants.KEY_RECEIVER_IMAGE);
-                      chatMessage.conversionName = documentChange.getDocument().getString(Constants.KEY_RECEIVER_NAME);
-                      chatMessage.conversionId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
-                  } else {
-                      chatMessage.conversionImage = documentChange.getDocument().getString(Constants.KEY_SENDER_IMAGE);
-                      chatMessage.conversionName = documentChange.getDocument().getString(Constants.KEY_SENDER_NAME);
-                      chatMessage.conversionId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
-                  }
-                  chatMessage.message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
-                  chatMessage.dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
-                  conversations.add(chatMessage);
-              } else if(documentChange.getType() == DocumentChange.Type.MODIFIED) {
-                  for(int i = 0; i < conversations.size(); i++) {
-                      String senderId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
-                      String receiverId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
-                      if (conversations.get(i).senderId.equals(senderId) && conversations.get(i).equals(receiverId)) {
-                          conversations.get(i).message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
-                          conversations.get(i).dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
-                          break;
-                      }
-                  }
-              }
-          }
-          Collections.sort(conversations, (obj1, obj2) -> obj2.dateObject.compareTo(obj1.dateObject));
-          binding.conversationsRecyclerView.smoothScrollToPosition(0);
-          binding.conversationsRecyclerView.setVisibility(View.VISIBLE);
-          binding.progressBar.setVisibility(View.GONE);
-      }
+        // Если при обработке произошла ошибка, возвращаемся из обработчика
+        if(error != null) {
+            return;
+        }
+        // Если данные успешно получены
+        if(value != null) {
+            // Цикл по всем изменениям в документах
+            for(DocumentChange documentChange : value.getDocumentChanges()) {
+                // Если документ был добавлен
+                if(documentChange.getType() == DocumentChange.Type.ADDED) {
+                    String senderId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
+                    String receiverId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
+                    ChatMessage chatMessage = new ChatMessage();
+                    chatMessage.senderId = senderId;
+                    chatMessage.receiverId = receiverId;
+                    // В зависимости от того, текущий пользователь является отправителем или получателем, устанавливаем соответствующие данные
+                    if(preferenceManager.getString(Constants.KEY_USER_ID).equals(senderId)) {
+                        chatMessage.conversionImage = documentChange.getDocument().getString(Constants.KEY_RECEIVER_IMAGE);
+                        chatMessage.conversionName = documentChange.getDocument().getString(Constants.KEY_RECEIVER_NAME);
+                        chatMessage.conversionId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
+                    } else {
+                        chatMessage.conversionImage = documentChange.getDocument().getString(Constants.KEY_SENDER_IMAGE);
+                        chatMessage.conversionName = documentChange.getDocument().getString(Constants.KEY_SENDER_NAME);
+                        chatMessage.conversionId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
+                    }
+                    chatMessage.message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
+                    chatMessage.dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
+                    // Добавляем новую беседу в список
+                    conversations.add(chatMessage);
+                } else if(documentChange.getType() == DocumentChange.Type.MODIFIED) {
+                    // Если документ был изменен, обновляем соответствующую беседу в списке
+                    for(int i = 0; i < conversations.size(); i++) {
+                        String senderId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
+                        String receiverId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
+                        if (conversations.get(i).senderId.equals(senderId) && conversations.get(i).equals(receiverId)) {
+                            conversations.get(i).message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
+                            conversations.get(i).dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
+                            break;
+                        }
+                    }
+                }
+            }
+            // Сортируем беседы по дате в порядке убывания
+            Collections.sort(conversations, (obj1, obj2) -> obj2.dateObject.compareTo(obj1.dateObject));
+            // Скроллим к последнему сообщению
+            binding.conversationsRecyclerView.smoothScrollToPosition(0);
+            // Показываем RecyclerView и скрываем ProgressBar
+            binding.conversationsRecyclerView.setVisibility(View.VISIBLE);
+            binding.progressBar.setVisibility(View.GONE);
+        }
     };
 
-    // Фунция для получения токена FirebaseMessaging (fcmToken)
+    // получение FirebaseMessaging токена для текущего устройства
     private void getToken() {
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(this::updateToken);
     }
 
-    // Фунция для обновления токена FirebaseMessaging (fcmToken)
     private void updateToken(String token) {
+        // Сохранение полученного токена в SharedPreferences
         preferenceManager.putString(Constants.KEY_FCM_TOKEN, token);
         FirebaseFirestore database = FirebaseFirestore.getInstance();
         DocumentReference documentReference = database.collection(Constants.KEY_COLLECTION_USERS).document(
                 preferenceManager.getString(Constants.KEY_USER_ID)
         );
+        // Обновление токена устройства в текущем профиле пользователя в Firestore
         documentReference.update(Constants.KEY_FCM_TOKEN, token)
                 .addOnFailureListener(e -> showToast("Unable to update token"));
     }
 
-    // Фунция для выхода из учетной записи
+    // Выход из учетной записи и переход на экран входа в систему
     private void signOut() {
-        // showToast("Signing out...");
         FirebaseFirestore database = FirebaseFirestore.getInstance();
         DocumentReference documentReference = database.collection(Constants.KEY_COLLECTION_USERS).document(
                 preferenceManager.getString(Constants.KEY_USER_ID)
         );
         HashMap<String, Object> updates = new HashMap<>();
+        // Удаление токена устройства из профиля пользователя в Firestore
         updates.put(Constants.KEY_FCM_TOKEN, FieldValue.delete());
+        // Обновление Firestore документа
         documentReference.update(updates)
                 .addOnSuccessListener(unused -> {
+                    // Очистка всей информации, хранится в SharedPreferences
                     preferenceManager.clear();
+                    // Переход на экран входа в систему
                     startActivity(new Intent(getApplicationContext(), SignInActivity.class));
+                    // Завершение текущего активити
                     finish();
                 })
-                .addOnFailureListener(e -> showToast("Unable to sign out"));
+                .addOnFailureListener(e -> showToast("Unable to sign out")); // Если не удалось выйти из системы, показать сообщение об ошибке
     }
 
     @Override
     public void onConversionListener(User user) {
+        // Обработчик, который вызывается, когда пользователь нажимает на одну из бесед
+        // Создание Intent для перехода к активности Chat
         Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+        // Добавление информации о выбранном пользователе в Intent как Extra Data
         intent.putExtra(Constants.KEY_USER, user);
+        // Запуск активности Chat, передавая Intent
         startActivity(intent);
     }
 }

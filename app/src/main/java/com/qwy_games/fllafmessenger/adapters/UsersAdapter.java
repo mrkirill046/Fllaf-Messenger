@@ -17,14 +17,16 @@ import java.util.List;
 
 public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserViewHolder> {
 
-    private final List<User> users;
-    private final UserListener userListener;
+    private final List<User> users; // Список пользователей
+    private final UserListener userListener; // Слушатель событий на выбор пользователя
 
+    // Конструктор адаптера
     public UsersAdapter(List<User> users, UserListener userListener) {
         this.users = users;
         this.userListener = userListener;
     }
 
+    // Создание нового ViewHolder
     @NonNull
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -34,16 +36,19 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserViewHold
         return new UserViewHolder(itemContainerUserBinding);
     }
 
+    // Привязка данных к ViewHolder
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
-        holder.setUserData(users.get(position));
+        holder.setUserData(users.get(position)); // Привязка данных пользователя к вьюхолдеру
     }
 
+    // Возврат количества элементов в списке
     @Override
     public int getItemCount() {
         return users.size();
     }
 
+    // ViewHolder для отдельного элемента в списке
     class UserViewHolder extends RecyclerView.ViewHolder {
         ItemContainerUserBinding binding;
 
@@ -52,14 +57,16 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserViewHold
             binding = itemContainerUserBinding;
         }
 
+        // Метод для связывания данных пользователя с элементами пользовательского интерфейса
         void setUserData(User user) {
-            binding.textName.setText(user.name);
-            binding.textEmail.setText(user.email);
-            binding.imageProfile.setImageBitmap(getUserImage(user.image));
-            binding.getRoot().setOnClickListener(v -> userListener.onUserClicked(user));
+            binding.textName.setText(user.name); // Установка имени пользователя
+            binding.textEmail.setText(user.email); // Установка адреса электронной почты пользователя
+            binding.imageProfile.setImageBitmap(getUserImage(user.image)); // Установка изображения профиля пользователя
+            binding.getRoot().setOnClickListener(v -> userListener.onUserClicked(user)); // Установка слушателя нажатия на элемент списка
         }
     }
 
+    // Метод для конвертации строки в кодировке Base64 в изображение
     private Bitmap getUserImage(String encodedImage) {
         byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);

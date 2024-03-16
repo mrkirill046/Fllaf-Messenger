@@ -15,23 +15,27 @@ import java.util.List;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private final List<ChatMessage> chatMessages;
-    private Bitmap receiverProfileImage;
-    private final String senderId;
+    private final List<ChatMessage> chatMessages; // Список объектов сообщений чата
+    private Bitmap receiverProfileImage; // Изображение профиля получателя сообщений
+    private final String senderId; // идентификатор отправителя сообщения
 
+    // Константы представляющие разные типы представлений
     private static final int VIEW_TYPE_SEND = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
 
+    // Метод для установки изображения профиля получателя
     public void setReceiverProfileImage(Bitmap bitmap) {
         receiverProfileImage = bitmap;
     }
 
+    // Конструктор адаптера
     public ChatAdapter(List<ChatMessage> chatMessages, Bitmap receiverProfileImage, String senderId) {
         this.chatMessages = chatMessages;
         this.receiverProfileImage = receiverProfileImage;
         this.senderId = senderId;
     }
 
+    // Здесь создаются представления для различных типов элементов
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -54,6 +58,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    // Здесь данные привязываются к каждому представлению элемента
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if(getItemViewType(position) == VIEW_TYPE_SEND) {
@@ -63,11 +68,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    // Здесь возвращается количество элементов в списке
     @Override
     public int getItemCount() {
         return chatMessages.size();
     }
 
+    // Возвращает тип представления элемента
     @Override
     public int getItemViewType(int position) {
         if(chatMessages.get(position).senderId.equals(senderId)) {
@@ -77,6 +84,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    // Класс ViewHolder для отправленных сообщений
     static class SendMessageViewHolder extends RecyclerView.ViewHolder {
         private final ItemContainerSendMessageBinding binding;
 
@@ -85,12 +93,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             binding = ItemContainerSendMessageBinding;
         }
 
+        // Здесь привязываем данные к элементам представления
         void setData(ChatMessage chatMessage) {
             binding.textMessage.setText(chatMessage.message);
             binding.textDateTime.setText(chatMessage.dataTime);
         }
     }
 
+    // Класс ViewHolder для полученных сообщений
     static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         private final ItemContainerReceivedMessageBinding binding;
 
@@ -99,6 +109,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             binding = ItemContainerReceivedMessageBinding;
         }
 
+        // Здесь привязываем данные к элементам представления
         void setData(ChatMessage chatMessage, Bitmap receiverProfileImage) {
             binding.textMessage.setText(chatMessage.message);
             binding.textDateTime.setText(chatMessage.dataTime);

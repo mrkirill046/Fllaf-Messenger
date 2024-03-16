@@ -21,80 +21,104 @@ public class UsersActivity extends BaseActivity implements UserListener {
     private ActivityUsersBinding binding;
     private PreferenceManager preferenceManager;
 
-    // Отрисовка activity_users.xml и инициализация всего необходимого
+    // Отрисовка activity_users.xml и инициализация необходимых ресурсов
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Привязка layout к активности с помощью view binding
         binding = ActivityUsersBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        // Инициализация PreferenceManager
         preferenceManager = new PreferenceManager(getApplicationContext());
+
+        // Установка слушателей
         setListeners();
+
+        // Получение данных всех пользователей
         getUser();
     }
 
-    // Функция для кнопок, чтобы они работали
+    // Функция установки слушателей на компоненты активности
     private void setListeners() {
+        // Устанавливает слушатель на 'назад', который возвращает пользователя на предыдущую активность
         binding.imageBack.setOnClickListener(v -> onBackPressed());
     }
 
-    // Получение массива всех пользователей
+    // Функция для получения списка всех пользователей
     private void getUser() {
-        loading(true);
+        loading(true); // Отображение индикатора прогресса
+
+        // Получим экземпляр Firestore и соберем пользователей из базы данных
         FirebaseFirestore database = FirebaseFirestore.getInstance();
         database.collection(Constants.KEY_COLLECTION_USERS)
                 .get().addOnCompleteListener(task -> {
-                    loading(false);
+                    loading(false); //Окончание отображения прогресса
                     String currentUserId = preferenceManager.getString(Constants.KEY_USER_ID);
-                    if(task.isSuccessful() && task.getResult() != null) { // Если все ок, то далее
+
+                    // Если получение данных успешно завершено
+                    if(task.isSuccessful() && task.getResult() != null) {
                         List<User> users = new ArrayList<>();
                         for(QueryDocumentSnapshot queryDocumentSnapshot : task.getResult()) {
+                            // Пропускаем текущего пользователя в списке
                             if(currentUserId.equals(queryDocumentSnapshot.getId())) {
                                 continue;
                             }
-                            // Заполнение данных пользователей
+
+                            // Создаем объект User и заполняем его поля данными из Firestore
                             User user = new User();
                             user.name = queryDocumentSnapshot.getString(Constants.KEY_NAME);
                             user.email = queryDocumentSnapshot.getString(Constants.KEY_EMAIL);
                             user.image = queryDocumentSnapshot.getString(Constants.KEY_IMAGE);
                             user.token = queryDocumentSnapshot.getString(Constants.KEY_FCM_TOKEN);
                             user.id = queryDocumentSnapshot.getId();
+
+                            // Добавляем пользователя в список
                             users.add(user);
                         }
+
+                        // Если пользователи есть, выводим их в RecyclerView
                         if(users.size() > 0) {
-                            // Отображение надписи о том, что нет доступных пользователей
                             UsersAdapter usersAdapter = new UsersAdapter(users, this);
+                            // Устанавливаем адаптер и делаем RecyclerView видимым
                             binding.usersRecyclerView.setAdapter(usersAdapter);
                             binding.usersRecyclerView.setVisibility(View.VISIBLE);
                         } else {
+                            // Если пользователей нет, включаем сообщение об ошибке
                             showErrorMessage();
                         }
                     } else {
+                        // Если получение данных завершилось неудачей, включаем сообщение об ошибке
                         showErrorMessage();
                     }
                 });
     }
 
-    // Отображение ошибки
+    // Функция для отображения сообщения об ошибке, когда нет доступных пользователей
     private void showErrorMessage() {
         binding.textErrorMessage.setText(String.format("%s", "No user available"));
-        binding.textErrorMessage.setVisibility(View.VISIBLE);
+        binding.textErrorMessage.setVisibility(View.VISIBLE); // Делает видимым текстовое поле сообщения об ошибке
     }
 
-    // Отображение загрузки
+    // Функция для управления отображением элементов интерфейса во время загрузки
     private void loading(Boolean isLoading) {
         if(isLoading) {
-            binding.progressBar.setVisibility(View.VISIBLE);
+            binding.progressBar.setVisibility(View.VISIBLE); // если true, показываем индикатор прогресса
         } else {
-            binding.progressBar.setVisibility(View.INVISIBLE);
+            binding.progressBar.setVisibility(View.INVISIBLE); // если false, скрываем индикатор прогресса
         }
     }
 
-    // Переход на страницу чата с пользователем
+    // Функция для перехода на страницу чата с выбранным пользователем, реализация метода из UserListener
     @Override
     public void onUserClicked(User user) {
+        // Создаем намерение для перехода на ChatActivity
         Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+        // Прикрепляем к Intent объект пользователя в качестве "extra"
         intent.putExtra(Constants.KEY_USER, user);
+        // Начинаем активность
         startActivity(intent);
-        finish();
+        finish(); // Завершаем текущую активность
     }
 }

@@ -45,38 +45,37 @@ import retrofit2.Response;
 
 public class ChatActivity extends BaseActivity {
 
-    private ActivityChatBinding binding;
-    private User receiverUser;
-    private List<ChatMessage> chatMessages;
-    private ChatAdapter chatAdapter;
-    private PreferenceManager preferenceManager;
-    private FirebaseFirestore database;
-    private String conversionId = null;
-    private Boolean isReceiverAvailable = false;
+    private ActivityChatBinding binding; // Биндинг для обращения к элементам интерфейса
+    private User receiverUser; // Объект пользователя, которому направляются сообщения
+    private List<ChatMessage> chatMessages; // Список объектов сообщений чата
+    private ChatAdapter chatAdapter; // Адаптер для отображения сообщений в RecyclerView
+    private PreferenceManager preferenceManager; // Менеджер настроек, облегчающий работу с SharedPreferences
+    private FirebaseFirestore database; // Объект базы данных Cloud Firestore
+    private String conversionId = null; // ID диалога
+    private Boolean isReceiverAvailable = false; // Статус доступности получателя сообщения
 
     // Отрисовка activity_chat.xml и инициализация всего необходимого
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityChatBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        setListeners();
-        loadReceiverDetails();
-        init();
-        listenMessages();
+        binding = ActivityChatBinding.inflate(getLayoutInflater()); // Устанавливаем связь с layout activity_chat
+        setContentView(binding.getRoot()); // Устанавливаем layout activity_chat в активность
+        setListeners(); // Устанавливаем слушатели на элементы активности
+        loadReceiverDetails(); // Загружаем детальные данные получателя
+        init(); // Инициализируем базу данных и адаптер для чата
+        listenMessages(); // Начинаем прослушивание входящих сообщений
     }
 
-    // Инициализация адаптеров и базы данных FirebaseFirestore
+    // Метод для инициализации начальных обьектов и полей
     private void init() {
         preferenceManager = new PreferenceManager(getApplicationContext());
         chatMessages = new ArrayList<>();
-        chatAdapter = new ChatAdapter(chatMessages, getBitmapFromEncodedString(receiverUser.image),
-                preferenceManager.getString(Constants.KEY_USER_ID));
-        binding.chatRecyclerView.setAdapter(chatAdapter);
-        database = FirebaseFirestore.getInstance();
+        chatAdapter = new ChatAdapter(chatMessages, getBitmapFromEncodedString(receiverUser.image), preferenceManager.getString(Constants.KEY_USER_ID));
+        binding.chatRecyclerView.setAdapter(chatAdapter);  // устанавливем этот адаптер к RecyclerView
+        database = FirebaseFirestore.getInstance(); // получаем ссылку на экземпляр Firestore
     }
 
-    // Функция для отправки сообщений
+    // Метод для отправки текстового сообщения
     private void sendMessage() {
         if(!binding.inputMessage.getText().toString().equals("")){ // Проверка содержания сообщения в inputMessage, если оно != 0, то далее
             HashMap<String, Object> message = new HashMap<>();
@@ -126,11 +125,12 @@ public class ChatActivity extends BaseActivity {
         }
     }
 
+    // Функция для показа уведомлений (Toast)
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
-    // Функция для отправки увледомления
+    // Функция для отправки push-уведомления другому пользователю
     private void sendNotification(String messageBody) {
         ApiClient.getClient().create(ApiService.class).sendMessage(
                 Constants.getRemoteMsgHeaders(),
@@ -165,7 +165,7 @@ public class ChatActivity extends BaseActivity {
         });
     }
 
-    // Функция для проверки пользователя, в сети ли он
+    // Функция для проверки доступности получателя в чате
     private void listenAvailabilityOfReceiver() {
         database.collection(Constants.KEY_COLLECTION_USERS).document(
                 receiverUser.id
@@ -196,7 +196,7 @@ public class ChatActivity extends BaseActivity {
         });
     }
 
-    // Функция для получения увледомлений
+    // Функция для прослушивания входящих сообщений
     private void listenMessages() {
         database.collection(Constants.KEY_COLLECTION_CHAT)
                 .whereEqualTo(Constants.KEY_SENDER_ID, preferenceManager.getString(Constants.KEY_USER_ID))
@@ -208,6 +208,7 @@ public class ChatActivity extends BaseActivity {
                 .addSnapshotListener(eventListener);
     }
 
+    // Обработчик событий Firestore для прослушивания новых сообщений в чате
     private final EventListener<QuerySnapshot> eventListener = (value, error) -> {
         if(error != null) {
             return;
@@ -240,7 +241,7 @@ public class ChatActivity extends BaseActivity {
         }
     };
 
-    // Расшифровка Bitmap из зашифровонной строки
+    // Функция для преобразования строки Base64 в Bitmap (используется для получения изображения пользователя)
     private Bitmap getBitmapFromEncodedString(String encodedImage) {
         if(encodedImage != null) {
             byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
@@ -250,19 +251,19 @@ public class ChatActivity extends BaseActivity {
         }
     }
 
-    // Загрузка данных получателя
+    // Функция для загрузки данных получателя
     private void loadReceiverDetails() {
         receiverUser = (User) getIntent().getSerializableExtra(Constants.KEY_USER);
         binding.textName.setText(receiverUser.name);
     }
 
-    // Функция для кнопок, чтобы они работали
+    // Функция для установки слушателей событий на элементы пользовательского интерфейса
     private void setListeners() {
         binding.imageBack.setOnClickListener(v -> onBackPressed());
         binding.layoutSend.setOnClickListener(v -> sendMessage());
     }
 
-    // Функция для получения реального времени
+    // Функция для получения читабельного реального времени
     private String getReadableDateTime(Date date) {
         return new SimpleDateFormat("dd MMMM, yyyy - hh:mm a", Locale.getDefault()).format(date);
     }

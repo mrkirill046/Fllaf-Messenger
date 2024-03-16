@@ -19,14 +19,16 @@ import java.util.List;
 
 public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConversationsAdapter.ConversionViewHolder> {
 
-    private final List<ChatMessage> chatMessages;
-    private final ConversionListener conversionListener;
+    private final List<ChatMessage> chatMessages; // Список объектов сообщений чата
+    private final ConversionListener conversionListener; // Слушатель нажатий на элемент списка
 
+    // Конструктор адаптера
     public RecentConversationsAdapter(List<ChatMessage> chatMessages, ConversionListener conversionListener) {
         this.chatMessages = chatMessages;
         this.conversionListener = conversionListener;
     }
 
+    // Создание нового ViewHolder
     @NonNull
     @Override
     public ConversionViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -37,16 +39,19 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
         ));
     }
 
+    // Привязка данных к ViewHolder
     @Override
     public void onBindViewHolder(@NonNull ConversionViewHolder holder, int position) {
         holder.setData(chatMessages.get(position));
     }
 
+    // Возврат количества элементов в списке
     @Override
     public int getItemCount() {
         return chatMessages.size();
     }
 
+    // ViewHolder для отдельного элемента в списке
     class ConversionViewHolder extends RecyclerView.ViewHolder {
         ItemContainerRecentConversionBinding binding;
 
@@ -55,11 +60,12 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
             binding =itemContainerRecentConversionBinding;
         }
 
+        // Функция для привязки данных к элементам пользовательского интерфейса
         void setData(ChatMessage chatMessage) {
-            binding.imageProfile.setImageBitmap(getConversionImage(chatMessage.conversionImage));
-            binding.textName.setText(chatMessage.conversionName);
-            binding.textRecentMessage.setText(chatMessage.message);
-            binding.getRoot().setOnClickListener(v -> {
+            binding.imageProfile.setImageBitmap(getConversionImage(chatMessage.conversionImage)); // Конвертация изображения из Base64 в Bitmap и установка его в imageView
+            binding.textName.setText(chatMessage.conversionName); // Установка имени пользователя в TextView
+            binding.textRecentMessage.setText(chatMessage.message); // Установка последнего сообщения диалога в TextView
+            binding.getRoot().setOnClickListener(v -> { // Установка слушателя нажатий на элемент списка
                 User user = new User();
                 user.id = chatMessage.conversionId;
                 user.name = chatMessage.conversionName;
@@ -69,6 +75,7 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
         }
     }
 
+    // Функция для конвертации Base64 строки в растровое изображение
     private Bitmap getConversionImage(String encodedImage) {
         byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);

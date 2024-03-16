@@ -9,9 +9,10 @@ import retrofit2.http.POST;
 
 public interface ApiService {
 
-    @POST("send")
+    // Метод для отправки сообщения с помощью HTTP POST запроса
+    @POST("send") // endpoint (путь) для отправки запроса
     Call<String> sendMessage(
-            @HeaderMap HashMap<String, String> headers,
-            @Body String messageBody
+            @HeaderMap HashMap<String, String> headers, // Заголовки запроса
+            @Body String messageBody // Тело запроса
             );
 }
