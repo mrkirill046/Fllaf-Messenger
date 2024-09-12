@@ -1,0 +1,11 @@
+[submodule "FM-auth-service"]
+    path = microservices/auth-service
+    url = https://github.com/mrkirill046/FM-auth-service
+
+[submodule "FM-message-service"]
+    path = microservices/message-service
+    url = https://github.com/mrkirill046/FM-message-service
+
+[submodule "FM-web-client"]
+    path = frontend/web-client
+    url = https://github.com/mrkirill046/FM-web-client
